@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>부등식의 성질</title>
+
+  <!-- MathJax 로드 (LaTeX 렌더링) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    defer
+  ></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fdfdfd;
+    }
+    h1, h2, h3 {
+      text-align: center;
+    }
+    .centered {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .difficulty-container {
+      display: flex;
+      justify-content: center;
+      margin: 10px 0;
+    }
+    .difficulty-container button {
+      margin: 0 5px;
+      padding: 10px 15px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #quiz-container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      display: none;
+    }
+    #question-text {
+      margin-bottom: 15px;
+      font-weight: bold;
+      min-height: 80px;
+    }
+    .choice {
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #f9f9f9;
+    }
+    .choice:hover {
+      background: #f1f1f1;
+    }
+    .score-info, .life-info, .time-info {
+      margin: 5px 0;
+    }
+    #energy-bar-container {
+      position: relative;
+      width: 100%;
+      height: 20px;
+      background: #ccc;
+      margin: 10px 0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #energy-bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #00f260, #0575e6);
+      transition: width 0.2s linear;
+    }
+    #final-screen {
+      display: none;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #start-screen {
+      text-align: center;
+      margin-top: 50px;
+    }
+    #name-input {
+      text-align: center;
+      font-size: 1rem;
+      width: 200px;
+      margin: 10px auto;
+      display: block;
+      padding: 5px;
+    }
+    #response {
+      white-space: pre;
+      text-align: left;
+      margin-top: 10px;
+      color: #333;
+      max-width: 600px;
+      margin: 10px auto;
+      font-size: 0.9rem;
+      background: #fafafa;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>부등식의 성질</h1>
+
+<div id="start-screen">
+  <h3>이름을 입력해주세요</h3>
+  <input type="text" id="name-input" placeholder="이름" />
+  <h3>난이도를 선택하세요</h3>
+  <div class="difficulty-container">
+    <button onclick="startGame('최상')">최상</button>
+    <button onclick="startGame('상')">상</button>
+    <button onclick="startGame('중')">중</button>
+    <button onclick="startGame('하')">하</button>
+  </div>
+</div>
+
+<div id="quiz-container">
+  <div class="score-info">점수: <span id="score">0</span></div>
+  <div class="life-info">남은 기회: <span id="lives">3</span></div>
+  <div class="time-info">전체 진행 시간: <span id="elapsed">0</span>초</div>
+  <div id="energy-bar-container">
+    <div id="energy-bar"></div>
+  </div>
+  <div id="question-text"></div>
+  <div id="choices-container"></div>
+</div>
+
+<div id="final-screen">
+  <h2 id="final-message"></h2>
+  <h3>최종 점수: <span id="final-score"></span></h3>
+  <h3>총 소요 시간: <span id="final-elapsed"></span>초</h3>
+  <button onclick="sendScore()">점수 전송</button>
+  <div id="response"></div>
+</div>
+
+<script>
+  /*************************************************************
+   * 문제 데이터 (총 47문제), 원문 그대로 사용 + 보기 순서도 그대로.
+   * 정답 인덱스는 0부터 시작.
+   *************************************************************/
+  const allQuestions = [
+
+    // 1) ~ 6)
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(a + 1 \\square b + 1\\)
+      `,
+      choices: [
+        "1) \\(>\\)",
+        "2) \\(<\\)",
+        "3) \\(=\\)",
+        "4) \\(\\le\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(a + 2 \\square b + 2\\)
+      `,
+      choices: [
+        "1) \\(>\\)",
+        "2) \\(\\le\\)",
+        "3) \\(<\\)",
+        "4) \\(=\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(a - 5 \\square b - 5\\)
+      `,
+      choices: [
+        "1) \\(>\\)",
+        "2) \\(<\\)",
+        "3) \\(\\ge\\)",
+        "4) \\(=\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(a + 6 \\square b + 6\\)
+      `,
+      choices: [
+        "1) \\(>\\)",
+        "2) \\(<\\)",
+        "3) \\(\\le\\)",
+        "4) \\(=\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(-4a \\square -4b\\)
+      `,
+      choices: [
+        "1) \\(>\\)",
+        "2) \\(\\ge\\)",
+        "3) \\(<\\)",
+        "4) \\(=\\)"
+      ],
+      answerIndex: 2
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(2a \\square 2b\\)
+      `,
+      choices: [
+        "1) \\(\\le\\)",
+        "2) \\(=\\)",
+        "3) \\(>\\)",
+        "4) \\(<\\)"
+      ],
+      answerIndex: 2
+    },
+
+    // 16) ~ 21)
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(-\\dfrac{1}{2}a \\square -\\dfrac{1}{2}b\\)
+      `,
+      choices: [
+        "1) \\(>\\)",
+        "2) \\(<\\)",
+        "3) \\(=\\)",
+        "4) \\(\\le\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(\\dfrac{a}{4} + 1 \\square \\dfrac{b}{4} + 1\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(\\ge\\)",
+        "3) \\(>\\)",
+        "4) \\(=\\)"
+      ],
+      answerIndex: 2
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(-\\dfrac{a}{5} + 4 \\square -\\dfrac{b}{5} + 4\\)
+      `,
+      choices: [
+        "1) \\(=\\)",
+        "2) \\(<\\)",
+        "3) \\(>\\)",
+        "4) \\(\\ge\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(3 - 5a \\square 3 - 5b\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(=\\)",
+        "3) \\(>\\)",
+        "4) \\(\\le\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(2 + \\dfrac{4}{3}a \\square 2 + \\dfrac{4}{3}b\\)
+      `,
+      choices: [
+        "1) \\(>\\)",
+        "2) \\(<\\)",
+        "3) \\(=\\)",
+        "4) \\(\\ge\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a > b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(5 - \\dfrac{1}{2}a \\square 5 - \\dfrac{1}{2}b\\)
+      `,
+      choices: [
+        "1) \\(=\\)",
+        "2) \\(<\\)",
+        "3) \\(\\le\\)",
+        "4) \\(>\\)"
+      ],
+      answerIndex: 1
+    },
+
+    // 22) ~ 32)
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(a + 3 \\square b + 3\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(>\\)",
+        "3) \\(=\\)",
+        "4) \\(\\ge\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(a + 4 \\square b + 4\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(>\\)",
+        "3) \\(\\neq\\)",
+        "4) \\(\\ge\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(a - 9 \\square b - 9\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(>\\)",
+        "3) \\(=\\)",
+        "4) \\(\\le\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(a - (-3) \\square b - (-3)\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(>\\)",
+        "3) \\(=\\)",
+        "4) \\(\\neq\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(2a \\square 2b\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(>\\)",
+        "3) \\(\\le\\)",
+        "4) \\(\\ge\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(12a \\square 12b\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(>\\)",
+        "3) \\(=\\)",
+        "4) \\(\\neq\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(\\dfrac{1}{3}a - 3 \\square \\dfrac{1}{3}b - 3\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(>\\)",
+        "3) \\(\\le\\)",
+        "4) \\(\\ge\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(-3a + 1 \\square -3b + 1\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(>\\)",
+        "3) \\(\\le\\)",
+        "4) \\(\\ge\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(a \\div (-2) \\square b \\div (-2)\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(>\\)",
+        "3) \\(\\le\\)",
+        "4) \\(=\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(-8a \\square -8b\\)
+      `,
+      choices: [
+        "1) \\(=\\)",
+        "2) \\(\\le\\)",
+        "3) \\(>\\)",
+        "4) \\(<\\)"
+      ],
+      answerIndex: 2
+    },
+    {
+      prompt: `
+      \\(a < b\\)일 때, 다음 식에서 알맞은 부등호를 고르시오.<br>
+      \\(\\dfrac{a}{7} \\square \\dfrac{b}{7}\\)
+      `,
+      choices: [
+        "1) \\(<\\)",
+        "2) \\(=\\)",
+        "3) \\(>\\)",
+        "4) \\(\\ge\\)"
+      ],
+      answerIndex: 0
+    },
+
+    // 39) ~ 45)
+    {
+      prompt: `
+      다음 \\(\\square\\)안에 알맞은 부등호를 써넣어라.<br>
+      \\(3a \\ge 3b \\Rightarrow a \\square b\\)
+      `,
+      choices: [
+        "1) \\(a \\ge b\\)",
+        "2) \\(a = b\\)",
+        "3) \\(a \\le b\\)",
+        "4) \\(a > b\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      다음 \\(\\square\\)안에 알맞은 부등호를 써넣어라.<br>
+      \\(-a < -b \\Rightarrow a \\square b\\)
+      `,
+      choices: [
+        "1) \\(a \\ge b\\)",
+        "2) \\(a > b\\)",
+        "3) \\(a \\le b\\)",
+        "4) \\(a = b\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      다음 \\(\\square\\)안에 알맞은 부등호를 써넣어라.<br>
+      \\((a - 10) > (b - 10) \\Rightarrow a \\square b\\)
+      `,
+      choices: [
+        "1) \\(a = b\\)",
+        "2) \\(a \\ge b\\)",
+        "3) \\(a < b\\)",
+        "4) \\(a > b\\)"
+      ],
+      answerIndex: 3
+    },
+    {
+      prompt: `
+      다음 \\(\\square\\)안에 알맞은 부등호를 써넣어라.<br>
+      \\(\\dfrac{3 - a}{2} < \\dfrac{3 - b}{2} \\Rightarrow a \\square b\\)
+      `,
+      choices: [
+        "1) \\(a < b\\)",
+        "2) \\(a > b\\)",
+        "3) \\(a \\le b\\)",
+        "4) \\(a = b\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      다음 \\(\\square\\)안에 알맞은 부등호를 써넣어라.<br>
+      \\((2a + 1) \\le (2b + 1) \\Rightarrow a \\square b\\)
+      `,
+      choices: [
+        "1) \\(a \\ge b\\)",
+        "2) \\(a = b\\)",
+        "3) \\(a \\le b\\)",
+        "4) \\(a < b\\)"
+      ],
+      answerIndex: 2
+    },
+    {
+      prompt: `
+      다음 \\(\\square\\)안에 알맞은 부등호를 써넣어라.<br>
+      \\(\\dfrac{3}{5}a - 4 \\ge \\dfrac{3}{5}b - 4 \\Rightarrow a \\square b\\)
+      `,
+      choices: [
+        "1) \\(a \\le b\\)",
+        "2) \\(a = b\\)",
+        "3) \\(a \\ge b\\)",
+        "4) \\(a < b\\)"
+      ],
+      answerIndex: 2
+    },
+    {
+      prompt: `
+      다음 \\(\\square\\)안에 알맞은 부등호를 써넣어라.<br>
+      \\(-a + 3 \\le -b + 3 \\Rightarrow a \\square b\\)
+      `,
+      choices: [
+        "1) \\(a \\ge b\\)",
+        "2) \\(a < b\\)",
+        "3) \\(a = b\\)",
+        "4) \\(a > b\\)"
+      ],
+      answerIndex: 0
+    },
+
+    // 65) ~ 68) (x > 2)
+    {
+      prompt: `
+      \\(x > 2\\)일 때, 다음 식의 값의 범위를 구하여라.<br>
+      \\(2x\\)
+      `,
+      choices: [
+        "1) \\(2x < 4\\)",
+        "2) \\(2x = 4\\)",
+        "3) \\(2x > 4\\)",
+        "4) \\(2x \\le 4\\)"
+      ],
+      answerIndex: 2
+    },
+    {
+      prompt: `
+      \\(x > 2\\)일 때, 다음 식의 값의 범위를 구하여라.<br>
+      \\(2x + 3\\)
+      `,
+      choices: [
+        "1) \\(2x + 3 \\le 7\\)",
+        "2) \\(2x + 3 > 7\\)",
+        "3) \\(2x + 3 = 7\\)",
+        "4) \\(2x + 3 < 7\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      \\(x > 2\\)일 때, 다음 식의 값의 범위를 구하여라.<br>
+      \\(-3x\\)
+      `,
+      choices: [
+        "1) \\(-3x < -6\\)",
+        "2) \\(-3x = -6\\)",
+        "3) \\(-3x > -6\\)",
+        "4) \\(-3x \\ge -6\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(x > 2\\)일 때, 다음 식의 값의 범위를 구하여라.<br>
+      \\(-x + 5\\)
+      `,
+      choices: [
+        "1) \\(-x + 5 < 3\\)",
+        "2) \\(-x + 5 \\ge 3\\)",
+        "3) \\(-x + 5 = 3\\)",
+        "4) \\(-x + 5 > 3\\)"
+      ],
+      answerIndex: 0
+    },
+
+    // 69) ~ 72) (-2 <= x < 1)
+    {
+      prompt: `
+      \\(-2 \\le x < 1\\)일 때, 다음 식 \\(x - 2\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-4 \\le x - 2 \\le -2\\)",
+        "2) \\(-4 \\le x - 2 < -1\\)",
+        "3) \\(-3 \\le x - 2 < -1\\)",
+        "4) \\(-4 < x - 2 < -1\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      \\(-2 \\le x < 1\\)일 때, 다음 식 \\(2x\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-4 < 2x < 2\\)",
+        "2) \\(-3 \\le 2x < 2\\)",
+        "3) \\(-4 \\le 2x < 2\\)",
+        "4) \\(-4 \\le 2x \\le 2\\)"
+      ],
+      answerIndex: 2
+    },
+    {
+      prompt: `
+      \\(-2 \\le x < 1\\)일 때, 다음 식 \\(3x - 1\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-7 \\le 3x - 1 \\le 2\\)",
+        "2) \\(-6 \\le 3x - 1 < 3\\)",
+        "3) \\(-7 < 3x - 1 < 2\\)",
+        "4) \\(-7 \\le 3x - 1 < 2\\)"
+      ],
+      answerIndex: 3
+    },
+    {
+      prompt: `
+      \\(-2 \\le x < 1\\)일 때, 다음 식 \\(-x\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-1 \\le -x < 2\\)",
+        "2) \\(-1 < -x \\le 2\\)",
+        "3) \\(-2 < -x \\le 1\\)",
+        "4) \\(-1 < -x < 2\\)"
+      ],
+      answerIndex: 1
+    },
+
+    // 78) ~ 83) (-1 < x <= 4)
+    {
+      prompt: `
+      \\(-1 < x \\le 4\\)일 때, 다음 식 \\(x + 3\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(2 < x + 3 \\le 7\\)",
+        "2) \\(2 \\le x + 3 < 7\\)",
+        "3) \\(x + 3 \\le 2\\)",
+        "4) \\(x + 3 > 7\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(-1 < x \\le 4\\)일 때, 다음 식 \\(2x\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-2 \\le 2x < 8\\)",
+        "2) \\(-2 < 2x \\le 8\\)",
+        "3) \\(2x < -2\\)",
+        "4) \\(2x \\ge 8\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      \\(-1 < x \\le 4\\)일 때, 다음 식 \\(\\dfrac{x}{4}\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-\\dfrac{1}{4} < \\dfrac{x}{4} \\le 1\\)",
+        "2) \\(-\\dfrac{1}{4} \\le \\dfrac{x}{4} < 1\\)",
+        "3) \\(\\dfrac{x}{4} > 1\\)",
+        "4) \\(\\dfrac{x}{4} \\le -\\dfrac{1}{4}\\)"
+      ],
+      answerIndex: 0
+    },
+    {
+      prompt: `
+      \\(-1 < x \\le 4\\)일 때, 다음 식 \\(3x - 4\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-7 \\le 3x - 4 < 8\\)",
+        "2) \\(3x - 4 \\le -7\\)",
+        "3) \\(-7 < 3x - 4 \\le 8\\)",
+        "4) \\(3x - 4 > 8\\)"
+      ],
+      answerIndex: 2
+    },
+    {
+      prompt: `
+      \\(-1 < x \\le 4\\)일 때, 다음 식 \\(-x + 2\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-2 < -x + 2 \\le 3\\)",
+        "2) \\(-x + 2 \\le -2\\)",
+        "3) \\(-2 \\le -x + 2 < 3\\)",
+        "4) \\(-x + 2 > 3\\)"
+      ],
+      answerIndex: 2
+    },
+    {
+      prompt: `
+      \\(-1 < x \\le 4\\)일 때, 다음 식 \\(5 - 2x\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-3 \\le 5 - 2x < 7\\)",
+        "2) \\(-3 < 5 - 2x \\le 7\\)",
+        "3) \\(5 - 2x \\ge 7\\)",
+        "4) \\(5 - 2x < -3\\)"
+      ],
+      answerIndex: 0
+    },
+
+    // 89) ~ 91) (-3 < a <= 2)
+    {
+      prompt: `
+      \\(-3 < a \\le 2\\)일 때, 다음 식 \\(3a\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-9 \\le 3a < 6\\)",
+        "2) \\(-9 < 3a \\le 6\\)",
+        "3) \\(3a \\le -9\\)",
+        "4) \\(3a > 6\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      \\(-3 < a \\le 2\\)일 때, 다음 식 \\(5a + 1\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(-14 < 5a + 1 < 11\\)",
+        "2) \\(-14 < 5a + 1 \\le 11\\)",
+        "3) \\(5a + 1 \\ge 11\\)",
+        "4) \\(5a + 1 \\le -14\\)"
+      ],
+      answerIndex: 1
+    },
+    {
+      prompt: `
+      \\(-3 < a \\le 2\\)일 때, 다음 식 \\(-2a + 5\\)의 값의 범위를 구하여라.
+      `,
+      choices: [
+        "1) \\(1 < -2a + 5 < 11\\)",
+        "2) \\(1 \\le -2a + 5 \\le 11\\)",
+        "3) \\(1 \\le -2a + 5 < 11\\)",
+        "4) \\(-2a + 5 > 11\\)"
+      ],
+      answerIndex: 2
+    }
+  ];
+
+  /*************************************************************
+   * 전역 변수
+   *************************************************************/
+  let shuffledQuestions = [];
+  let currentQuestionIndex = 0;
+  let score = 0;
+  let lives = 3;
+  let totalElapsed = 0;       // 전체 경과 시간 (초)
+  let questionStartTime = 0;  // 각 문제 시작 시간(에너지바용)
+  let questionTimeLimit = 999999; // 난이도별 제한(기본값 큰 수)
+  let questionScore = 10;     // 난이도별 점수
+  let timerInterval = null;   // 전체 시간 타이머
+  let energyInterval = null;  // 에너지바 타이머
+  let playerName = "";
+
+  /*************************************************************
+   * 시작 함수: 이름/난이도 입력 후 시작
+   *************************************************************/
+  function startGame(difficulty) {
+    // 이름 읽어오기
+    const nameInput = document.getElementById("name-input");
+    playerName = nameInput.value.trim();
+    if(!playerName) {
+      alert("이름을 입력해주세요!");
+      return;
+    }
+
+    // 난이도 설정
+    switch(difficulty) {
+      case "최상":
+        questionTimeLimit = 20; 
+        questionScore = 20;
+        break;
+      case "상":
+        questionTimeLimit = 30;
+        questionScore = 15;
+        break;
+      case "중":
+        questionTimeLimit = 40;
+        questionScore = 13;
+        break;
+      case "하":
+        questionTimeLimit = 999999; // 시간 제한 없음
+        questionScore = 10;
+        break;
+    }
+
+    // 화면 전환
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("quiz-container").style.display = "block";
+
+    // 문제 셔플
+    shuffledQuestions = shuffleArray([...Array(allQuestions.length).keys()]);
+    currentQuestionIndex = 0;
+    score = 0;
+    lives = 3;
+    totalElapsed = 0;
+
+    // 전체 타이머 시작
+    if(timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(()=>{
+      totalElapsed++;
+      document.getElementById("elapsed").innerText = totalElapsed;
+    },1000);
+
+    // 첫 문제 표시
+    showQuestion();
+  }
+
+  /*************************************************************
+   * 문제 표시
+   *************************************************************/
+  function showQuestion() {
+    if(currentQuestionIndex >= allQuestions.length) {
+      // 모든 문제 소진
+      endGame("모든 문제를 완료했습니다!");
+      return;
+    }
+    if(lives <= 0) {
+      endGame("기회를 모두 소진하였습니다.");
+      return;
+    }
+
+    // 초기화
+    clearInterval(energyInterval);
+    document.getElementById("energy-bar").style.width = "100%";
+
+    // 문제 가져오기
+    const qIndex = shuffledQuestions[currentQuestionIndex];
+    const qData = allQuestions[qIndex];
+
+    // DOM에 표시
+    document.getElementById("question-text").innerHTML = qData.prompt;
+    const choicesContainer = document.getElementById("choices-container");
+    choicesContainer.innerHTML = "";
+    qData.choices.forEach((choice, idx)=>{
+      const div = document.createElement("div");
+      div.className = "choice";
+      div.innerHTML = choice;
+      div.onclick = ()=>checkAnswer(idx);
+      choicesContainer.appendChild(div);
+    });
+
+    // MathJax 재렌더
+    MathJax.typeset();
+
+    // 에너지바 (난이도 하 일 경우 사실상 제한 없음)
+    let timeLeft = questionTimeLimit;
+    questionStartTime = Date.now();
+    if(questionTimeLimit < 999999) {
+      energyInterval = setInterval(()=>{
+        const elapsedForThis = Math.floor((Date.now() - questionStartTime)/1000);
+        const remain = timeLeft - elapsedForThis;
+        if(remain <= 0) {
+          // 시간 초과
+          clearInterval(energyInterval);
+          loseLifeWithTimeOut(qData); 
+        } else {
+          const percentage = (remain/timeLeft)*100;
+          document.getElementById("energy-bar").style.width = percentage + "%";
+        }
+      },200);
+    } else {
+      // 하(무제한) -> 그냥 풀바로 유지
+      document.getElementById("energy-bar").style.width = "100%";
+    }
+
+    // 갱신
+    document.getElementById("score").innerText = score;
+    document.getElementById("lives").innerText = lives;
+  }
+
+  /*************************************************************
+   * 정답 체크
+   *************************************************************/
+  function checkAnswer(choiceIndex) {
+    clearInterval(energyInterval);
+    const qIndex = shuffledQuestions[currentQuestionIndex];
+    const qData = allQuestions[qIndex];
+    if(choiceIndex === qData.answerIndex) {
+      // 정답
+      score += questionScore;
+      alert("정답입니다!");
+    } else {
+      // 오답
+      alert("틀렸습니다!\n정답: " + qData.choices[qData.answerIndex]);
+    }
+    currentQuestionIndex++;
+    showQuestion();
+  }
+
+  /*************************************************************
+   * 시간초과 처리
+   *************************************************************/
+  function loseLifeWithTimeOut(qData) {
+    lives--;
+    alert("시간이 초과되었습니다!\n정답: " + qData.choices[qData.answerIndex]);
+    document.getElementById("lives").innerText = lives;
+    currentQuestionIndex++;
+    showQuestion();
+  }
+
+  /*************************************************************
+   * 게임 종료
+   *************************************************************/
+  function endGame(msg) {
+    clearInterval(timerInterval);
+    clearInterval(energyInterval);
+
+    document.getElementById("quiz-container").style.display = "none";
+    document.getElementById("final-screen").style.display = "block";
+    document.getElementById("final-message").innerText = msg;
+    document.getElementById("final-score").innerText = score;
+    document.getElementById("final-elapsed").innerText = totalElapsed;
+  }
+
+  /*************************************************************
+   * 점수 전송
+   *************************************************************/
+  function sendScore() {
+    const gameName = "부등식의 성질";
+    saveData(gameName, playerName, score, totalElapsed);
+    document.getElementById("response").style.display = "block";
+  }
+
+  /*************************************************************
+   * 문제 순서 섞기 (보기는 섞지 않음)
+   *************************************************************/
+  function shuffleArray(array) {
+    // Fisher-Yates
+    for(let i=array.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  /*************************************************************
+   * 서버 전송 함수 (제공된 코드)
+   *************************************************************/
+  async function saveData(game, name, score, elapsedTime) {
+    const FUNCTION_URL = "https://us-central1-record-f420d.cloudfunctions.net/report";
+
+    const requestData = {
+      game,
+      name,
+      score: parseInt(score, 10),
+      elapsedTime: parseInt(elapsedTime, 10)
+    };
+
+    try {
+      const response = await fetch(FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        document.getElementById('response').innerText = 
+          `성공: ${JSON.stringify(responseData, null, 2)}`;
+      } else {
+        document.getElementById('response').innerText = 
+          `오류: ${JSON.stringify(responseData, null, 2)}`;
+      }
+    } catch (error) {
+      console.error('요청 실패:', error);
+      document.getElementById('response').innerText = 
+          `네트워크 오류: ${error.message}`;
+    }
+  }
+</script>
+
+</body>
+</html>
